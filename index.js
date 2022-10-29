@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const shell = require('shelljs');
 const fileUpload = require('express-fileupload');
+const fs = require('fs');
 const { createImage } = require('./create-image');
 
 const port = 3001;
@@ -43,18 +44,16 @@ app.post('/file', async (req, res) => {
 
 app.post('/', async (req, res) => {
   const snips = req.body.snips;
+  const audioFileName = req.body.audioFileName;
   const firstSnip = snips[0];
-
+  // await fs.writeFile(`output-files/${firstSnip.id}`);
+  await fs.mkdirSync(`output-files/${firstSnip.id}`);
   // add to folder? (each with image & audio)
-  console.log('## pre-audio trim');
   shell.exec(
-    `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i output.mp3 -c copy output1.mp3`,
+    `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i public/files/${audioFileName} -c copy output-files/${firstSnip.id}/output.mp3`,
   );
-  console.log('## post-audio trim');
 
-  console.log('## pre-createimage');
-  await createImage({ image: firstSnip.image });
-  console.log('## post-createimage');
+  await createImage({ image: firstSnip.image, imageName: firstSnip.id });
 
   res.send('Hello World!');
 });
