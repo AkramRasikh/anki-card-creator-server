@@ -30,8 +30,6 @@ app.get('/', (req, res) => {
 app.post('/file', async (req, res) => {
   let uploadFile = req.files.file;
   const fileName = req.files.file.name;
-  console.log('## uploadFile.mv: ', uploadFile.mv);
-  // uploadFile.mv(`${__dirname}/public/files/${fileName}`
   uploadFile.mv(`public/files/${fileName}`, function (err) {
     if (err) {
       return res.status(500).send(err);
@@ -46,16 +44,17 @@ app.post('/', async (req, res) => {
   const snips = req.body.snips;
   const audioFileName = req.body.audioFileName;
   const firstSnip = snips[0];
-  // await fs.writeFile(`output-files/${firstSnip.id}`);
-  await fs.mkdirSync(`output-files/${firstSnip.id}`);
-  // add to folder? (each with image & audio)
+  try {
+    await fs.mkdirSync(`output-files/${firstSnip.id}`); // __dirname
+  } catch (error) {
+    console.log('## Error creating path');
+  }
   shell.exec(
     `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i public/files/${audioFileName} -c copy output-files/${firstSnip.id}/output.mp3`,
   );
-
   await createImage({ image: firstSnip.image, imageName: firstSnip.id });
-
-  res.send('Hello World!');
+  // create anki card here?
+  res.status(200).send('Snippet created');
 });
 
 app.listen(port, () => {
