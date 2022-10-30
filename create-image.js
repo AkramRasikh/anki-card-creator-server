@@ -1,10 +1,10 @@
 const fs = require('fs/promises');
 
-const createImage = async ({ image, imageName = 'output' }) => {
+const createImage = async ({ image, imageId = 'output' }) => {
   const base64Data = image.replace(/^data:image\/png;base64,/, '');
   try {
     await fs.writeFile(
-      `./output-files/${imageName}/output.png`,
+      `./output-files/${imageId}/output-${imageId}.png`,
       base64Data,
       'base64',
     );
