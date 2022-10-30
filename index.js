@@ -9,6 +9,7 @@ const fileUpload = require('express-fileupload');
 const { createImage } = require('./create-image');
 const { fileToCollection } = require('./send-to-media-collection');
 const { sendToAnkiCard } = require('./create-anki-card');
+const { deleteMedia } = require('./delete-media');
 
 const port = 3001;
 
@@ -57,23 +58,25 @@ app.post('/', async (req, res) => {
   const firstSnip = snips[0];
   try {
     await fs.mkdirSync(`output-files/${firstSnip.id}`); // __dirname
-  } catch (error) {
-    console.log('## Error creating path');
-  }
-  shell.exec(
-    `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i public/files/${audioFileName} -c copy output-files/${firstSnip.id}/output-${firstSnip.id}.mp3`,
-  );
-  await createImage({ image: firstSnip.image, imageId: firstSnip.id });
-  // create anki card here?
-  const pathToFile = outputPath + '/' + firstSnip.id;
-  const mediaToCopy = await fs.readdirSync(pathToFile);
+    shell.exec(
+      `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i public/files/${audioFileName} -c copy output-files/${firstSnip.id}/output-${firstSnip.id}.mp3`,
+    );
+    await createImage({ image: firstSnip.image, imageId: firstSnip.id });
+    const pathToFile = outputPath + '/' + firstSnip.id;
+    const mediaToCopy = await fs.readdirSync(pathToFile);
 
-  mediaToCopy.forEach(async (mediaItem) => {
-    const pathToLocalMedia = outputPath + '/' + firstSnip.id + '/' + mediaItem;
-    await fileToCollection({ pathToLocalMedia, media: mediaItem });
-  });
-  sendToAnkiCard({ mediaId: firstSnip.id });
-  res.status(200).send('Snippet created');
+    mediaToCopy.forEach(async (mediaItem) => {
+      const pathToLocalMedia =
+        outputPath + '/' + firstSnip.id + '/' + mediaItem;
+      await fileToCollection({ pathToLocalMedia, media: mediaItem });
+    });
+    sendToAnkiCard({ mediaId: firstSnip.id });
+    deleteMedia(outputPath + '/' + firstSnip.id);
+    return res.status(200).send('Snippet created');
+  } catch (error) {
+    console.log('## Error in creating card: ', error);
+    return res.status(400).send('General flop');
+  }
 });
 
 app.listen(port, () => {
