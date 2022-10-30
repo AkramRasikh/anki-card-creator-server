@@ -8,6 +8,7 @@ const shell = require('shelljs');
 const fileUpload = require('express-fileupload');
 const { createImage } = require('./create-image');
 const { fileToCollection } = require('./send-to-media-collection');
+const { sendToAnkiCard } = require('./create-anki-card');
 
 const port = 3001;
 
@@ -71,6 +72,7 @@ app.post('/', async (req, res) => {
     const pathToLocalMedia = outputPath + '/' + firstSnip.id + '/' + mediaItem;
     await fileToCollection({ pathToLocalMedia, media: mediaItem });
   });
+  sendToAnkiCard({ mediaId: firstSnip.id });
   res.status(200).send('Snippet created');
 });
 
