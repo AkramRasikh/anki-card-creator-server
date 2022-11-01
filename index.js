@@ -52,6 +52,32 @@ app.post('/file', async (req, res) => {
   });
 });
 
+app.post('/snippet', async (req, res) => {
+  const snips = req.body.snips;
+  const audioFileName = req.body.audioFileName;
+  const firstSnip = snips[0];
+  try {
+    await fs.mkdirSync(`output-files/${firstSnip.id}`); // __dirname
+    shell.exec(
+      `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i public/files/${audioFileName} -c copy output-files/${firstSnip.id}/output-${firstSnip.id}.mp3`,
+    );
+    await createImage({ image: firstSnip.image, imageId: firstSnip.id });
+    const pathToFile = outputPath + '/' + firstSnip.id;
+    const mediaToCopy = await fs.readdirSync(pathToFile);
+
+    mediaToCopy.forEach(async (mediaItem) => {
+      const pathToLocalMedia =
+        outputPath + '/' + firstSnip.id + '/' + mediaItem;
+      await fileToCollection({ pathToLocalMedia, media: mediaItem });
+    });
+    sendToAnkiCard({ mediaId: firstSnip.id });
+    deleteMedia(outputPath + '/' + firstSnip.id);
+    return res.status(200).send('Snippet created');
+  } catch (error) {
+    console.log('## Error in creating card: ', error);
+    return res.status(400).send('General flop');
+  }
+});
 app.post('/', async (req, res) => {
   const snips = req.body.snips;
   const audioFileName = req.body.audioFileName;

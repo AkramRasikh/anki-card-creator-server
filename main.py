@@ -15,14 +15,10 @@ parser.add_argument('--media_id', action="store", dest='media_id', default=0)
 
 args = parser.parse_args()
 
-# def collection_to_anki_deck(folder_name, deck_name):
 def collection_to_anki_deck(deck_name, media_id):
 
   print('1')
   temp_file_path='/Users/akramrasikh/projects/anki-card-creator-server/output-files/' + media_id
-  # if args.folder_to_anki == 0 or args.anki_deck == 0:
-  #   return print("Pass correct flags!")
-
   model_id = int(str(random.getrandbits(64))[:8])
   deck_id = int(str(random.getrandbits(64))[:8])
   print(model_id)
@@ -58,13 +54,21 @@ def collection_to_anki_deck(deck_name, media_id):
               <body>\
                   <img src={{Front}}></img>\
                   <br></br>\
-                  <div class='audio-container'>\
-                    <audio controls autoplay class='audio' id='audio'>\
+                  <div>\
+                    <audio controls autoplay class='audio-class'>\
                       <source src={{Back}} type='audio/mp3'>\
                       Your browser does not support the audio element.\
                     </audio>\
                   </div>\
             </body>\
+            <style>\
+              body {\
+                text-align: center;\
+              }\
+              .audio-class {\
+                width: 80%;\
+              }\
+            </style>\
         ",
       },
     ])
