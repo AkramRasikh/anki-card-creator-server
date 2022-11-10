@@ -99,6 +99,6 @@ def collection_to_anki_deck(deck_name, media_id):
 
   my_deck.add_note(my_note)
 
-  genanki.Package(my_deck).write_to_file(deck_name + randomNumber + '.apkg')
+  genanki.Package(my_deck).write_to_file('./anki-folder/' + deck_name + randomNumber + '.apkg')
 
 collection_to_anki_deck(args.folder_to_anki, args.media_id)

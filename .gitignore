@@ -1,5 +1,7 @@
 node_modules
 public/files
 output-files
+anki-folder
 .env
 *.apkg
+.DS_Store
