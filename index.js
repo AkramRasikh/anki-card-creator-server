@@ -10,6 +10,7 @@ const { createImage } = require('./create-image');
 const { fileToCollection } = require('./send-to-media-collection');
 const { sendToAnkiCard } = require('./create-anki-card');
 const { deleteMedia } = require('./delete-media');
+const ffmpeg = require('fluent-ffmpeg');
 
 const port = 3001;
 
@@ -21,10 +22,12 @@ app.use(
   }),
 );
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(
   bodyParser.urlencoded({
+    limit: '50mb',
     extended: true,
+    parameterLimit: 50000,
   }),
 );
 app.use(fileUpload());
@@ -56,23 +59,27 @@ app.post('/snippet', async (req, res) => {
   const snips = req.body.snips;
   const audioFileName = req.body.audioFileName;
   const firstSnip = snips[0];
+  const ankiDeckName = req.body.ankiDeckName + '-' + firstSnip.id;
   try {
     await fs.mkdirSync(`output-files/${firstSnip.id}`); // __dirname
-    shell.exec(
-      `ffmpeg -ss ${firstSnip.startTime} -to ${firstSnip.endTime} -i public/files/${audioFileName} -c copy output-files/${firstSnip.id}/output-${firstSnip.id}.mp3`,
-    );
-    await createImage({ image: firstSnip.image, imageId: firstSnip.id });
-    const pathToFile = outputPath + '/' + firstSnip.id;
-    const mediaToCopy = await fs.readdirSync(pathToFile);
-
-    mediaToCopy.forEach(async (mediaItem) => {
-      const pathToLocalMedia =
-        outputPath + '/' + firstSnip.id + '/' + mediaItem;
-      await fileToCollection({ pathToLocalMedia, media: mediaItem });
-    });
-    sendToAnkiCard({ mediaId: firstSnip.id });
-    deleteMedia(outputPath + '/' + firstSnip.id);
-    return res.status(200).send('Snippet created');
+    const duration = (firstSnip.endTime - firstSnip.startTime).toString(); // meed string?
+    ffmpeg(`public/files/${audioFileName}`)
+      .seekInput(firstSnip.startTime)
+      .duration(duration)
+      .output(`output-files/${firstSnip.id}/output-${firstSnip.id}.mp3`)
+      .on('end', async function () {
+        await createImage({ image: firstSnip.image, imageId: firstSnip.id });
+        const pathToFile = outputPath + '/' + firstSnip.id;
+        const mediaToCopy = await fs.readdirSync(pathToFile);
+        mediaToCopy.forEach(async (mediaItem) => {
+          const pathToLocalMedia =
+            outputPath + '/' + firstSnip.id + '/' + mediaItem;
+          await fileToCollection({ pathToLocalMedia, media: mediaItem });
+        });
+        sendToAnkiCard({ ankiDeckName, mediaId: firstSnip.id });
+        return res.status(200).send('Snippet created');
+      })
+      .run();
   } catch (error) {
     console.log('## Error in creating card: ', error);
     return res.status(400).send('General flop');
