@@ -11,6 +11,7 @@ const { fileToCollection } = require('./send-to-media-collection');
 const { sendToAnkiCard } = require('./create-anki-card');
 const { deleteMedia } = require('./delete-media');
 const ffmpeg = require('fluent-ffmpeg');
+// const zlib = require('zlib');
 
 const port = 3001;
 
@@ -55,11 +56,31 @@ app.post('/file', async (req, res) => {
   });
 });
 
+//www.geeksforgeeks.org/node-js-fs-open-method/
+//(the media-convere)
+// https:
+// fs.readdirSync('./anki-folder/' + fileName);
+// fs.open('./anki-folder/' + fileName, 'r', function (err, f) {
+//   if (err) {
+//     console.log('## Opened err: ', err);
+//   }
+//   console.log('## Opened (f): ', f);
+//   console.log('## Opened (fileName): ', fileName);
+// });
+// fs.watch('./anki-folder', (_, fileName) => {
+//   const fileContents = fs.createReadStream('./anki-folder/' + fileName);
+//   const writeStream = fs.createWriteStream(
+//     './anki-folder/' + fileName.slice(0, -4),
+//   );
+//   const unzip = zlib.createGunzip();
+//   fileContents.pipe(unzip).pipe(writeStream);
+// });
+
 app.post('/snippet', async (req, res) => {
   const snips = req.body.snips;
   const audioFileName = req.body.audioFileName;
   const firstSnip = snips[0];
-  const ankiDeckName = req.body.ankiDeckName + '-' + firstSnip.id;
+  const ankiDeckName = req.body.ankiDeckName; // + '-' + firstSnip.id;
   try {
     await fs.mkdirSync(`output-files/${firstSnip.id}`); // __dirname
     const duration = (firstSnip.endTime - firstSnip.startTime).toString(); // meed string?

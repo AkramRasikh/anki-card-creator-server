@@ -38,6 +38,8 @@ def collection_to_anki_deck(deck_name, media_id):
   viable_files = sorted(list(filter(check_if_viable, onlyfiles)))
   print('## pre-viable_files')
   print(viable_files)
+  audio_template=codecs.open("./audio-template-python.html", 'r')
+  html_string = audio_template.read()
   print('## post-viable_files')
 
   audioCard = viable_files[0]
@@ -53,40 +55,7 @@ def collection_to_anki_deck(deck_name, media_id):
       {
         'name': 'Card 1',
         'qfmt': "<img src={{Front}}></img>",
-        'afmt': "\
-              <body>\
-                <img src={{Front}}></img>\
-                <br></br>\
-                <div>\
-                  <audio controls autoplay class='audio-class' id='audio-id'>\
-                    <source src={{Back}} type='audio/mp3' />\
-                    Your browser does not support the audio element.\
-                  </audio>\
-                  <div>\
-                    <button onClick='skip(-2)'>(-) 2 sec</button>\
-                    <span class='divider-span'> </span>\
-                    <button onClick='skip(2)'>2 sec (+)</button>\
-                  </div>\
-                </div>\
-              </body>\
-              <style>\
-                body {\
-                  text-align: center;\
-                }\
-                .audio-class {\
-                  width: 80%;\
-                }\
-                .divider-span {\
-                  padding: 20px;\
-                }\
-              </style>\
-              <script type='text/javascript'>\
-                var audio = document.getElementById('audio-id');\
-                function skip(value) {\
-                  audio.currentTime += value;\
-                }\
-              </script>\
-        ",
+        'afmt': html_string,
       },
     ])
   my_deck = genanki.Deck(
